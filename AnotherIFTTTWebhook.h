@@ -34,6 +34,14 @@
 //    send_webhook(EVENT, KEY, Value1, Value2, Value3);
 // ====================================================================
 // ====================================================================
+//
+// Modified by Philipp Beckers to enable it to signal trouble while
+// trying to connect to IFTTTs maker webhook service.
+// Now returns either "true" if all went good, or "false" if the
+// connection to the IFTTT webhook service domain wasnt possible for 
+// any reason.
+//
+// Based on Siytek.com's adapted version of Neil Webbers original.
 
 WiFiClient client;
 
@@ -49,10 +57,12 @@ char *append_ul(char *here, unsigned long u) {
     return append_str(here, ultoa(u, buf, 10));
 }
 
-void send_webhook(char *MakerIFTTT_Event, char *MakerIFTTT_Key, char *value1, char *value2, char *value3) {
+bool send_webhook(char *MakerIFTTT_Event, char *MakerIFTTT_Key, char *value1, char *value2, char *value3) { // changed return code from void to bool, enabling to signal an error
 
     // connect to the Maker event server
-    client.connect("maker.ifttt.com", 80);
+    if (!client.connect("maker.ifttt.com", 80)) { // if we can't connect to IFTTT to begin with, return error
+      return false; // end function, signal error back
+    }
 
     // construct the POST request
     char post_rqst[256];    // hand-calculated to be big enough
@@ -97,5 +107,5 @@ void send_webhook(char *MakerIFTTT_Event, char *MakerIFTTT_Key, char *value1, ch
     // finally we are ready to send the POST to the server!
     client.print(post_rqst);
     client.stop();
-    
+    return true; // all good, signal true for all ok
 }
